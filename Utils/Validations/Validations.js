@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const { isValidObjectId } = require('mongoose');
 // To validate name
 const validateName = (name)=>
 {
@@ -53,7 +53,7 @@ const validatePassword = (password)=>
 // to validate id
 const validateId = (id) => 
 {
-    return mongoose.Types.ObjectId.isValid(id);
+    return isValidObjectId(id)
 };
 
 export {
