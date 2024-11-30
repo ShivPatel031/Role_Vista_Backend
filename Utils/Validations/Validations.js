@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 // To validate name
 const validateName = (name)=>
 {
@@ -49,6 +50,12 @@ const validatePassword = (password)=>
 
 }
 
+// to validate id
+const validateId = (id) => 
+{
+    return mongoose.Types.ObjectId.isValid(id);
+};
+
 export {
             validateMobileNumber,
             validateName,
@@ -56,5 +63,6 @@ export {
             validateBranch,
             validateGender,
             validatePassword,
-            validateRole
+            validateRole,
+            validateId
         };
