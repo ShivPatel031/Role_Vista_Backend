@@ -1,6 +1,0 @@
-
-const shiv = ()=>{};
-
-const trijant = ()=>{};
-
-
