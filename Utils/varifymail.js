@@ -1,17 +1,16 @@
 import {transport} from "../Config/NodemailerConfig.js"
 import dotenv from "dotenv";
-import { mailVerificationMessage } from "../constant.js";
 dotenv.config();
 
 // mail verification function
-const sendVarificationMail = async (to_email,userName,verificationLink)=>
+const sendMail = async (to_email,subject,message)=>
 {
-    const info = await transporter.sendMail({
+    const info = await transport.sendMail({
         from: `${process.env.EMAIL_FROM}`, 
         to: `${to_email}`, 
-        subject: "Mail Varifiction for RoleVista.", 
-        html:mailVerificationMessage.replace('{{userName}}', userName).replace('{{verificationLink}}', verificationLink),
+        subject, 
+        html:message,
       });
 }
 
-export {sendVarificationMail};
+export {sendMail};

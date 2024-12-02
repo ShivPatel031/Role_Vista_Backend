@@ -3,19 +3,23 @@ import { Request } from "../Models/RequestModel.js";
 import { validateBranch,validateEmail,validateGender,validateMobileNumber,validateName,validatePassword,validateRole,validateDOB, validateId } from "../Utils/Validations/Validations.js"
 import bcrypt from "bcrypt";
 
-const RegisterUser = async(req,res)=>
+//  user register controller
+const registerUser = async(req,res)=>
 {
+    // collect all parameter
     const {userName,role,email,branch,dob,gender,mobileNo,password} = req.body;
 
+    
     // checking all required parameters present
     if(!userName || !email || !role || !branch || !dob || !gender || !mobileNo || !password)
     {
         return res.status(404).json({
             success:false,
-            message:"all fields are required."
+            message:"All fields are required."
         });
     }
 
+    
     // verifying all parameter values
     if(!validateName(userName)) return res.status(404).json({success:false,message:"Name length must be less then 50 or only inlude aphabets."});
 
@@ -32,9 +36,12 @@ const RegisterUser = async(req,res)=>
     if(!validateDOB(dob)) return res.status(404).json({success:false,message:"Data of birth must be between 1920-present and must be 15 year older or more."});
 
     if(!validateGender(gender)) return res.status(404).json({success:false,message:"Gender is not valid."});
+    
+    
     //  hashing password
     const hashPassword = bcrypt.hash(password,process.env.SALT);
 
+    
     // Storing data
     try {
 
@@ -68,4 +75,52 @@ const RegisterUser = async(req,res)=>
     }
 }
 
-export {RegisterUser};
+
+// user login controller
+const loginUser = async(req,res) =>
+{
+    // collect parameters
+    const {email,password} = req.body;
+
+    
+    // check that all parameters are availabe
+    if(!email || !password) return res.status(404).json({success:true , message:"All fields are required."})
+
+
+    // varify all parameter formate 
+    if(!validateEmail(email)) return res.status(404).json({success:false,message:"Email is not in correct formate."});
+
+    if(!validatePassword(password)) return res.status(404).json({success:false,message:"Password must contain at least 1 lowercase, 1 uppercase , 1 number and 1 special character and length must be between 8-12."});
+
+    try {
+
+        const existingUser = await User.findOne({email});
+
+        const existingRequrest = await Request.findOne({email});
+
+        if(!existingUser || !existingRequrest) return res.status(404).json({success:false,message:"Email or password is wrong."});
+
+        let user = "";
+        if(existingUser)
+        {
+            user = existingUser;
+        }
+        else user = existingRequrest;
+
+        const validPassword = await bcrypt.compare(password,user.password);
+
+        if(!validPassword) return res.status(404).json({success:false,message:"Email or password is wrong."});
+
+        // genrate token
+
+        const authToken = "";
+
+        //send respones with auth tokens
+
+    } catch (error) {
+        console.log(error.message);
+        return res.status(500).json({success:false,message:"something went wrong while login user.",error:error.message});
+    }
+
+}
+export {registerUser,loginUser};
