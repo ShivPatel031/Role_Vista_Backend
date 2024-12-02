@@ -56,6 +56,12 @@ const validateId = (id) =>
     return isValidObjectId(id)
 };
 
+const validateDOB = (dob) => 
+{
+    const dobRegex = /^(19|20)\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+    return dobRegex.test(dob);
+};
+
 export {
             validateMobileNumber,
             validateName,
@@ -64,5 +70,6 @@ export {
             validateGender,
             validatePassword,
             validateRole,
-            validateId
+            validateId,
+            validateDOB
         };

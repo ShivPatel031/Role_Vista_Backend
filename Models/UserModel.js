@@ -20,7 +20,7 @@ const userSchema =  new Schema(
             enum:["male","female","other"],
             required:true
         },
-        mobile:
+        mobileNo:
         {
             type:String,
             required:true,
