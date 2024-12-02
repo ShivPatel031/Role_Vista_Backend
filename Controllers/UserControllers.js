@@ -1,4 +1,5 @@
 import { User } from "../Models/UserModel.js";
+import { Request } from "../Models/RequestModel.js";
 import { validateBranch,validateEmail,validateGender,validateMobileNumber,validateName,validatePassword,validateRole,validateDOB, validateId } from "../Utils/Validations/Validations.js"
 import bcrypt from "bcrypt";
 
@@ -38,10 +39,12 @@ const RegisterUser = async(req,res)=>
     try {
 
         const existingUser = await User.findOne({email});
-
         if(existingUser) return res.status(404).json({success:true,message:"User already exist."});
-        
-        const user = await User.create({
+
+        const existingRequrest = await Request.findOne({email});
+        if(existingRequrest) return res.status(404).json({success:true,message:"Request already exist."});
+
+        const user = await Request.create({
             userName,
             email,
             mobileNo,
@@ -53,6 +56,8 @@ const RegisterUser = async(req,res)=>
         });
     
         if(!user) return res.status(500).json({success:false,message:"something went wrong while add user in database."});
+
+        await user.sendEmailVerifiction();
         
         return res.status(200).json({success:true,message:"User add successfully"});
 

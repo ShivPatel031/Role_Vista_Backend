@@ -1,4 +1,5 @@
 import mongoos,{Schema} from "mongoose";
+import { sendVarificationMail } from "../Utils/varifymail.js";
 
 // User schema 
 
@@ -61,4 +62,17 @@ const requestSchema =  new Schema(
     }
 );
 
-export const User = mongoos.model("Request",requestSchema);
+requestSchema.methods.sendEmailVerifiction= async ()=>{
+    if(!this.verifiedEmail)
+    {
+        //genrate token
+        const token = "";
+
+        //setup link
+        const link = `${process.env.BACKEND_LINK}/`
+
+        sendVarificationMail(this.email,this.userName,link)
+    }
+};
+
+export const Request = mongoos.model("Request",requestSchema);
