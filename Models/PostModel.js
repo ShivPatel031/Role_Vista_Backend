@@ -4,14 +4,21 @@ import mongoose, {Schema} from "mongoose";
 // Post model
 const postSchema = new Schema(
     {
-        content:
+        title:
         {
             type:String,
             required:true,
-            maxlength:400
+            maxlength:40,
+            trim:true
         },
-        image:{
+        contentUrl:{
             type:String
+        },
+        description:{
+            type:String,
+            required:true,
+            maxlength:200,
+            trim:true
         },
         like:[
             {
