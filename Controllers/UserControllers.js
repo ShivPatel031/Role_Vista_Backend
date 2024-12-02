@@ -30,12 +30,17 @@ const RegisterUser = async(req,res)=>
 
     if(!validateDOB(dob)) return res.status(404).json({success:false,message:"Data of birth must be between 1920-present and must be 15 year older or more."});
 
-
+    if(!validateGender(gender)) return res.status(404).json({success:false,message:"Gender is not valid."});
     //  hashing password
     const hashPassword = bcrypt.hash(password,process.env.SALT);
 
     // Storing data
     try {
+
+        const existingUser = await User.findOne({email});
+
+        if(existingUser) return res.status(404).json({success:true,message:"User already exist."});
+        
         const user = await User.create({
             userName,
             email,
@@ -43,14 +48,19 @@ const RegisterUser = async(req,res)=>
             role,
             branch,
             dob,
+            gender,
             password:hashPassword
         });
     
         if(!user) return res.status(500).json({success:false,message:"something went wrong while add user in database."});
         
-        return res.status(200).json({success:true,message:"User add successfully"});git 
-    } catch (error) {
-        
-    }
+        return res.status(200).json({success:true,message:"User add successfully"});
 
+    } catch (error) 
+    {
+        console.log(error.message);
+        return res.status(500).json({success:false,message:"something went wrong while adding user.",error:error.message});
+    }
 }
+
+export {RegisterUser};
