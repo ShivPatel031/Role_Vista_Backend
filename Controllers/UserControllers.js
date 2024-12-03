@@ -4,6 +4,7 @@ import { validateBranch,validateEmail,validateGender,validateMobileNumber,valida
 import bcrypt from "bcrypt";
 import { generateJWT } from "../Utils/generateJWT.js";
 import { isValidObjectId } from "mongoose";
+import { Permission } from "../Models/PermissionModel.js";
 
 //  user register controller
 const registerUser = async(req,res)=>
@@ -169,4 +170,40 @@ const logoutUser = async(req,res)=>
     return res.status(200).clearCookie("role_vista_token",option).json({success:true,message:"User Logout successfully."});
     
 }
-export {registerUser,loginUser,logoutUser};
+
+function isBoolType(value){
+    return typeof value === "boolean";
+}
+
+const modifyPermissions = async(req,res)=>
+{
+    const {canPost,canComment,canSubAdminRestrictPost,canSubAdminRestrictComment} = req.body;
+
+    if(!isBoolType(canPost) || !isBoolType(canComment) || !isBoolType(canSubAdminRestrictComment) || !isBoolType(canSubAdminRestrictPost))
+    {
+        return res.status(404).json({success:false,message:"invalid values."});
+    }
+
+    const permissions = new Permission(req.permissions);
+
+    try{
+
+        if(!permissions) res.status(500).json({success:false,message:"user permission data not found."});
+
+        permissions.canPost = canPost;
+        permissions.canComment = canComment;
+        permissions.canSubAdminRestrictComment = canSubAdminRestrictComment;
+        permissions.canSubAdminRestrictPost = canSubAdminRestrictPost;
+
+        const response = await permissions.save();
+
+        if(!response) return res.status(500).json({success:false,message:"somthing went worng while nodifying permission of user."});
+
+        return res.status(200).json({success:true,message:"Permission is updated successfully."})
+
+    }catch(error)
+    {
+        return res.status(500).json({success:false,message:"Somthing went worng while changing permission",error:error.message});
+    }
+}
+export {registerUser,loginUser,logoutUser,modifyPermissions};

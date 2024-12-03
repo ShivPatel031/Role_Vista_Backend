@@ -24,7 +24,7 @@ exports.auth=async (req,res,next)=>{
 
             if(!userCredentials) return res.status(404).json({success:false,message:"not a valid token."});
 
-            req.user=decode
+            req.user=userCredentials;
 
         } catch(err){
             return res.status(401).json({
