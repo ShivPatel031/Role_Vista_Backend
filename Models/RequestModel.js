@@ -1,6 +1,7 @@
 import mongoos,{Schema} from "mongoose";
 import { sendMail } from "../Utils/varifymail.js";
 import { mailVerificationMessage } from "../constant.js";
+import { generateJWT } from "../Utils/generateJWT.js";
 
 // User schema 
 
@@ -66,14 +67,23 @@ const requestSchema =  new Schema(
 requestSchema.methods.sendEmailVerifiction= async ()=>{
     
     //genrate token
-    const token = "";
+    const token = generateJWT(this._id,"10m");
+
+    if(!token) {
+
+        console.log("token not found");
+
+        return false;
+    }
 
     //setup link
-    const link = `${process.env.BACKEND_LINK}/`
+    const verificationLink= `${process.env.BACKEND_LINK}/`
 
-    const message = mailVerificationMessage.replace('{{userName}}', userName).replace('{{verificationLink}}', verificationLink)
+    const message = mailVerificationMessage.replace('{{userName}}', this.userName).replace('{{verificationLink}}', verificationLink)
 
     await sendMail(this.email,"Verify Your Email Address",message);
+
+    return true;
 };
 
 export const Request = mongoos.model("Request",requestSchema);

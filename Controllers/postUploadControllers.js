@@ -45,6 +45,11 @@ exports.postUpload=async (req,res)=>{
             contentUrl:response.secure_url,
         })
 
+        if(!dbResponse)
+        {
+            return res.status(500).json({success:false,message:"somthing went wrong while inserting post in database."});
+        }
+
         return res.status(200).json({
             success:true,
             data:dbResponse,

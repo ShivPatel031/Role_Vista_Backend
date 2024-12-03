@@ -2,6 +2,7 @@ import { User } from "../Models/UserModel.js";
 import { Request } from "../Models/RequestModel.js";
 import { validateBranch,validateEmail,validateGender,validateMobileNumber,validateName,validatePassword,validateRole,validateDOB, validateId } from "../Utils/Validations/Validations.js"
 import bcrypt from "bcrypt";
+import { generateJWT } from "../Utils/generateJWT.js";
 
 //  user register controller
 const registerUser = async(req,res)=>
@@ -64,7 +65,12 @@ const registerUser = async(req,res)=>
     
         if(!user) return res.status(500).json({success:false,message:"something went wrong while add user in database."});
 
-        await user.sendEmailVerifiction();
+        const success = await user.sendEmailVerifiction();
+
+        if(!success)
+        {
+            return  res.status(500).json({success:true,message:"something went wrong while sending message but user data is stored successfully."});
+        }
         
         return res.status(200).json({success:true,message:"User add successfully"});
 
@@ -111,11 +117,25 @@ const loginUser = async(req,res) =>
 
         if(!validPassword) return res.status(404).json({success:false,message:"Email or password is wrong."});
 
+        // to send user data to frontend with password null for security.
+        user.password = null;
+
         // genrate token
+        const authToken = generateJWT(user._id);
 
-        const authToken = "";
+        if(!authToken)
+        {
+            return res.status(500).json({success:false,message:"token genereation error"});
+        }
 
-        //send respones with auth tokens
+        const option = {
+            httpOnly:true,
+            sameSite:"none",
+            secure:true,
+            expiresIn: '6h'
+        }
+
+        return res.status(200).cookie("authToken",JSON.stringify(authToken),option).json({success:true,message:"user login successfully.",data:user});
 
     } catch (error) {
         console.log(error.message);
