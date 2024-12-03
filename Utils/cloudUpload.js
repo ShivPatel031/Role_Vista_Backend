@@ -1,6 +1,6 @@
 import cloudinary from "cloudinary"
 
-const UploadCloudinary=async (file,folder,quality=100)=>{
+const postUploadCloudinary=async (file,folder,quality=100)=>{
     const options={folder}
     options.resource_type="auto"
     options.quality=quality
