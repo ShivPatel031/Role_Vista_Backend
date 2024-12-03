@@ -20,19 +20,19 @@ const postSchema = new Schema(
             maxlength:200,
             trim:true
         },
-        like:[
+        likes:[
             {
                 type:Schema.Types.ObjectId,
                 ref:'User'
             }
         ],
-        comment:[
+        comments:[
             {
                 type:Schema.Types.ObjectId,
                 ref:"Comment"
             }
         ],
-        category:[
+        categories:[
             {
                 type:String,
                 trim:true,
