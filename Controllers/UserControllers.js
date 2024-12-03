@@ -20,6 +20,14 @@ const registerUser = async(req,res)=>
         });
     }
 
+    // triming and lowecase conversion
+    userName=userName.trim().toLowerCase();
+    email=email.trim().toLowerCase();
+    role=role.trim().toLowerCase();
+    branch=branch.trim().toLowerCase();
+    dob=dob.trim().toLowerCase();
+    gender=gender.trim().toLowerCase();
+    mobileNo=mobileNo.trim().toLowerCase();
     
     // verifying all parameter values
     if(!validateName(userName)) return res.status(404).json({success:false,message:"Name length must be less then 50 or only inlude aphabets."});
@@ -93,6 +101,9 @@ const loginUser = async(req,res) =>
     if(!email || !password) return res.status(404).json({success:true , message:"All fields are required."})
 
 
+    email=email.trim().toLowerCase();
+
+
     // varify all parameter formate 
     if(!validateEmail(email)) return res.status(404).json({success:false,message:"Email is not in correct formate."});
 
@@ -135,7 +146,7 @@ const loginUser = async(req,res) =>
             expiresIn: '6h'
         }
 
-        return res.status(200).cookie("authToken",JSON.stringify(authToken),option).json({success:true,message:"user login successfully.",data:user});
+        return res.status(200).cookie("role_vista_t oken",JSON.stringify(authToken),option).json({success:true,message:"user login successfully.",data:user});
 
     } catch (error) {
         console.log(error.message);

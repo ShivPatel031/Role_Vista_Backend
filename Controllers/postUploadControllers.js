@@ -7,6 +7,7 @@ exports.postUpload=async (req,res)=>{
     try{
 
         const {title,description,enableComment,category,userId}=req.body;
+        
         const file=req.files.file;
 
         const supportedType=["mp4","mov","jpg","jpeg","png"]
