@@ -5,22 +5,11 @@ import { Request } from "../Models/RequestModel.js"
 
 dotenv.config()
 
-const generateJWT = async (_id,expiresIn) => {
+const generateJWT = async (userCredentials,expiresIn) => {
 
-    let userCredentials = await User.findOne({ _id });
-
-    if (!userCredentials) {
-       console.log("id not found in userdatabase");
-
-       userCredentials = await Request.findOne({_id});
-
-       if(!userCredentials)
-       {
-            console.log("id not found in request database");
-
-            return undefined
-       }
-       
+    if(!userCredentials)
+    {
+        return undefined
     }
 
 

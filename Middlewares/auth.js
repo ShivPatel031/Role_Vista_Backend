@@ -1,13 +1,14 @@
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
+import { User } from "../Models/UserModel.js";
 require("dotenv").config()
 
 // authentication
-exports.auth=(req,res,next)=>{
-    try{
+exports.auth=async (req,res,next)=>{
+    
         const token=req.cookie.token || req.body.token || req.header.token || req.header("Authorisation").replace("Bearer","")
 
         if(!token){
-            res.status(401).json({
+            return res.status(401).json({
                 success:false,
                 message:"token not found."
             })
@@ -16,20 +17,22 @@ exports.auth=(req,res,next)=>{
         //decoding jwt token
         try{
             const decode=jwt.verify(token,process.env.JWT_SECRET);
+
+            if(!decode) return res.status(404).json({success:false,message:"not a valid token."});
+
+            let userCredentials = await User.findById(decode?.id);
+
+            if(!userCredentials) return res.status(404).json({success:false,message:"not a valid token."});
+
             req.user=decode
+
         } catch(err){
-            res.status(401).json({
+            return res.status(401).json({
                 success:false,
                 message:"error while decoding."
             })
         }
         next();
-    } catch(err){
-        res.status(401).json({
-            success:false,
-            message:"error while verifying."
-        })
-    }
 }
 
 

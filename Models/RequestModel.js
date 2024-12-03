@@ -64,15 +64,11 @@ const requestSchema =  new Schema(
     }
 );
 
-requestSchema.methods.sendEmailVerifiction= async ()=>{
+requestSchema.methods.sendEmailVerifiction= async (token)=>{
     
-    //genrate token
-    const token = generateJWT(this._id,"10m");
 
     if(!token) {
-
         console.log("token not found");
-
         return false;
     }
 

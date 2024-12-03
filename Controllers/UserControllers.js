@@ -73,7 +73,9 @@ const registerUser = async(req,res)=>
     
         if(!user) return res.status(500).json({success:false,message:"something went wrong while add user in database."});
 
-        const success = await user.sendEmailVerifiction();
+        const token = generateJWT(user,"10m");
+
+        const success = await user.sendEmailVerifiction(token);
 
         if(!success)
         {
