@@ -3,6 +3,7 @@ import { Request } from "../Models/RequestModel.js";
 import { validateBranch,validateEmail,validateGender,validateMobileNumber,validateName,validatePassword,validateRole,validateDOB, validateId } from "../Utils/Validations/Validations.js"
 import bcrypt from "bcrypt";
 import { generateJWT } from "../Utils/generateJWT.js";
+import { isValidObjectId } from "mongoose";
 
 //  user register controller
 const registerUser = async(req,res)=>
@@ -55,10 +56,13 @@ const registerUser = async(req,res)=>
     try {
 
         const existingUser = await User.findOne({email});
-        if(existingUser) return res.status(404).json({success:true,message:"User already exist."});
+        if(existingUser) return res.status(404).json({success:true,message:"User already exist.",requestedUser:false});
 
         const existingRequrest = await Request.findOne({email});
-        if(existingRequrest) return res.status(404).json({success:true,message:"Request already exist."});
+        if(existingRequrest)
+        {
+            return res.status(404).json({success:true,message:"Request already exist.",requestedUser:true,varifiedMail:existingRequrest.verifiedEmail});
+        } 
 
         const user = await Request.create({
             userName,
@@ -113,18 +117,10 @@ const loginUser = async(req,res) =>
 
     try {
 
-        const existingUser = await User.findOne({email});
+        const user = await User.findOne({email});
 
-        const existingRequrest = await Request.findOne({email});
+        if(!user) return res.status(404).json({success:false,message:"Email or password is wrong."});
 
-        if(!existingUser || !existingRequrest) return res.status(404).json({success:false,message:"Email or password is wrong."});
-
-        let user = "";
-        if(existingUser)
-        {
-            user = existingUser;
-        }
-        else user = existingRequrest;
 
         const validPassword = await bcrypt.compare(password,user.password);
 
@@ -134,7 +130,7 @@ const loginUser = async(req,res) =>
         user.password = null;
 
         // genrate token
-        const authToken = generateJWT(user._id);
+        const authToken = generateJWT(user,"24h");
 
         if(!authToken)
         {
@@ -145,15 +141,32 @@ const loginUser = async(req,res) =>
             httpOnly:true,
             sameSite:"none",
             secure:true,
-            expiresIn: '6h'
+            expiresIn: '24h'
         }
 
-        return res.status(200).cookie("role_vista_t oken",JSON.stringify(authToken),option).json({success:true,message:"user login successfully.",data:user});
+        return res.status(200).cookie("role_vista_token",JSON.stringify(authToken),option).json({success:true,message:"user login successfully.",data:user});
 
     } catch (error) {
         console.log(error.message);
         return res.status(500).json({success:false,message:"something went wrong while login user.",error:error.message});
     }
-
 }
-export {registerUser,loginUser};
+
+const logoutUser = async(req,res)=>
+{
+    const userId = req.params;
+    
+    if(!userId) return res.status(404).json({success:false,message:"user id not found."});
+
+    if(!isValidObjectId(userId)) return res.status(404).json({success:false,message:"user id is not valid."});
+
+    const option = {
+        httpOnly:true,
+        sameSite:"none",
+        secure:true,
+    }
+
+    return res.status(200).clearCookie("role_vista_token",option).json({success:true,message:"User Logout successfully."});
+    
+}
+export {registerUser,loginUser,logoutUser};
