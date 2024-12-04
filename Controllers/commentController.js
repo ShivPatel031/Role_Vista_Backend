@@ -1,4 +1,4 @@
-import { Post } from "../models/PostModel"
+import { Post } from "../Models/PostModel"
 
 const createComment = async (req, res) => {
     try {

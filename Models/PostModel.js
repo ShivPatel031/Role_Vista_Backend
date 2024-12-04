@@ -4,6 +4,10 @@ import mongoose, {Schema} from "mongoose";
 // Post model
 const postSchema = new Schema(
     {
+        cloudinaryId:{
+            type:String,
+            required:true,
+        },
         title:
         {
             type:String,
