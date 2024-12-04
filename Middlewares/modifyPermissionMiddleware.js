@@ -6,32 +6,39 @@ const modifyPermissionMiddleware = async(req,res,next)=>
 {
     if(req.user.role === 'admin') next();
 
-    const restrictedUserId = req.body;
+    const {restrictedUserId} = req.body;
     
     if(!validateId(restrictedUserId)) return res.status(404).json({success:false,message:"not a valid Id."});
 
-    const restrictUser = await User.findById(restrictedUserId);
+    try {
+        const restrictUser = await User.findById(restrictedUserId);
 
-    if(!restrictUser) return res.status(404).json({success:false,message:"restrict user not found."});
+        if(!restrictUser) return res.status(404).json({success:false,message:"restrict user not found."});
 
-    // check branch
-    if(restrictUser.branch !== req.user.branch) return res.status(500).json({success:false,message:"user don't have permission to restrict givin user."})
+        // check branch
+        if(restrictUser.branch !== req.user.branch) return res.status(500).json({success:false,message:"user don't have permission to restrict givin user."})
 
-    const permissions = await Permission.findOne({userId:restrictedUserId});
+        const permissions = await Permission.findOne({userId:restrictedUserId});
 
-    if(!permissions) return res.status(500).json({success:false,message:"restrict user permission data not found."});
+        if(!permissions) return res.status(500).json({success:false,message:"restrict user permission data not found."});
 
-    if(!req.body.canPost)
+        if(!req.body.canPost)
+        {
+            if(!permissions.canSubAdminRestrictPost) return res.status(500).json({success:false,message:"user don't have permission to restrict this user."})
+        }
+
+        if(!req.body.canComment)
+        {
+            if(!permissions.canSubAdminRestrictComment) return res.status(500).json({success:false,message:"user don't have permission to restrict this user."})
+        }
+
+        req.permissions = permissions;
+    } 
+    catch (error) 
     {
-        if(!permissions.canSubAdminRestrictPost) return res.status(500).json({success:false,message:"user don't have permission to restrict this user."})
+        return res.status(500).json({success:false,message:"something went wrong while modifying permission."})
     }
-
-    if(!req.body.canComment)
-    {
-        if(!permissions.canSubAdminRestrictComment) return res.status(500).json({success:false,message:"user don't have permission to restrict this user."})
-    }
-
-    req.permissions = permissions;
+    
     
     next();
 
