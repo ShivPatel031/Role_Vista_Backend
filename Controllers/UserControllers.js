@@ -120,8 +120,27 @@ const loginUser = async(req,res) =>
 
         const user = await User.findOne({email});
 
-        if(!user) return res.status(404).json({success:false,message:"Email or password is wrong."});
+        if(!user)
+        {
+            const requestedUser = await Request.findOne({email});
 
+            if(!requestedUser)
+            {
+                return res.status(404).json({success:false,message:"Not Role vista user Register first."});
+            }
+            else{
+
+                if(!requestedUser.verifiedEmail)
+                {
+                    return res.status(404).json({success:false,message:"Your email is not verified."});
+                }
+                else{
+                    return res.status(404).json({success:false,message:"Request is yet to approve."});
+                }
+                
+            }
+             
+        } 
 
         const validPassword = await bcrypt.compare(password,user.password);
 
@@ -204,6 +223,40 @@ const modifyPermissions = async(req,res)=>
     }catch(error)
     {
         return res.status(500).json({success:false,message:"Somthing went worng while changing permission",error:error.message});
+    }
+}
+
+const approveRequest = async (req,res)=>
+{
+    const {requestedUserId} = req.body;
+
+    if(!requestedUserId) return res.status(404).json({success:false,message:"requestedUser Id is not found."});
+
+    if(!validateId(requestedUserId)) return res.status(404).json({success:false,message:"requestedUserId is not valid id"});
+
+    try {
+        const requestedUser = await Request.findById(requestedUserId);
+
+        if(!requestedUser) return res.status(404).json({success:false,message:"Requested user not found in database."});
+
+        const createdUser = await User.create({
+            userName:requestedUser.userName,
+            role:requestedUser.role,
+            gender:requestedUser.gender,
+            mobileNo:requestedUser.mobileNo,
+            email:requestedUser.email,
+            branch:requestedUser.branch,
+            password:requestedUser.password,
+            dob:requestedUser.dob
+        });
+
+        if(!createdUser) return res.status(404).json({success:false,message:"User is not created in database."});
+
+        await Request.findByIdAndDelete(requestedUserId);
+
+        return res.status(200).json({success:false,message:"User approved successfully."});
+    } catch (error) {
+        return res.status(404).json({success:false,message:"Something went wrong while approving user."});
     }
 }
 export {registerUser,loginUser,logoutUser,modifyPermissions};

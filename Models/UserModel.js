@@ -1,4 +1,4 @@
-import mongoos,{Schema} from "mongoose";
+import mongoose,{Schema} from "mongoose";
 
 // User schema 
 
@@ -62,4 +62,4 @@ const userSchema =  new Schema(
     }
 );
 
-export const User = mongoos.model("User",userSchema);
+export const User = mongoose.model("User",userSchema);
