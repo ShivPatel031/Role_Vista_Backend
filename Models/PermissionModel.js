@@ -20,7 +20,7 @@ const permissionSchema = new Schema(
         },
         canSubAdminRestrictPost:{
             type:Boolean,
-            deafult:false,
+            default:false,
         },
         canSubAdminRestrictComment:{
             type:Boolean,

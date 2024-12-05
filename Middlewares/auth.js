@@ -1,11 +1,13 @@
 import jwt from "jsonwebtoken";
 import { User } from "../Models/UserModel.js";
-require("dotenv").config()
+import dotenv from "dotenv";
+dotenv.config();
 
 // authentication
-exports.auth=async (req,res,next)=>{
+const auth=async (req,res,next)=>{
     
-        const token=req.cookie.token || req.body.token || req.header.token || req.header("Authorisation").replace("Bearer","")
+        const token=req.cookies?.role_vista_token || req.body?.role_vista_token || req.header?.role_vista_token ;
+        // || req.header("role_vista_token").replace("Bearer","")
 
         if(!token){
             return res.status(401).json({
@@ -37,9 +39,9 @@ exports.auth=async (req,res,next)=>{
 
 
 // authorization for student
-exports.isStudent=(req,res,next)=>{
+const isUser=(req,res,next)=>{
     try{
-        if(req.user.role!="Student"){
+        if(req.user.role!="user"){
             return res.status(401).json({
                 success:false,
                 message:"you are not student"
@@ -56,9 +58,9 @@ exports.isStudent=(req,res,next)=>{
 
 
 // authorization for subAdmin
-exports.isSubAdmin=async (req,res,next) => {
+const isSubAdmin=async (req,res,next) => {
     try{
-        if(req.user.accountType!="Instructor"){
+        if(req.user.role!="sub-admin"){
             return res.status(401).json({
                 success:false,
                 message:"this is protected route for Instructors only."
@@ -76,9 +78,9 @@ exports.isSubAdmin=async (req,res,next) => {
 
 
 // authorization for admin
-exports.isAdmin=(req,res,next)=>{
+const isAdmin=(req,res,next)=>{
     try{
-        if (req.user.role!="Admin"){
+        if (req.user.role!="admin"){
             return res.status(401).json({
                 success:false,
                 message:"you are not admin."
@@ -92,3 +94,5 @@ exports.isAdmin=(req,res,next)=>{
         })
     }
 }
+
+export {auth,isAdmin,isSubAdmin,isUser};

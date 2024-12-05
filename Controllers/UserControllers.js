@@ -99,7 +99,7 @@ const registerUser = async (req, res) => {
 // user login controller
 const loginUser = async (req, res) => {
     // collect parameters
-    const { email, password } = req.body;
+    let { email, password } = req.body;
 
 
     // check that all parameters are availabe
@@ -137,6 +137,7 @@ const loginUser = async (req, res) => {
 
         }
 
+
         const validPassword = await bcrypt.compare(password, user.password);
 
         if (!validPassword) return res.status(404).json({ success: false, message: "Email or password is wrong." });
@@ -145,7 +146,7 @@ const loginUser = async (req, res) => {
         user.password = null;
 
         // genrate token
-        const authToken = generateJWT(user, "24h");
+        const authToken = await generateJWT(user, "24h");
 
         if (!authToken) {
             return res.status(500).json({ success: false, message: "token genereation error" });
@@ -158,7 +159,7 @@ const loginUser = async (req, res) => {
             expiresIn: '24h'
         }
 
-        return res.status(200).cookie("role_vista_token", JSON.stringify(authToken), option).json({ success: true, message: "user login successfully.", data: user });
+        return res.status(200).cookie("role_vista_token", authToken, option).json({ success: true, message: "user login successfully.", data: user });
 
     } catch (error) {
         console.log(error.message);
@@ -226,6 +227,7 @@ const approveRequest = async (req, res) => {
     try {
         const requestedUser = await Request.findById(requestedUserId);
 
+        
         if (!requestedUser) return res.status(404).json({ success: false, message: "Requested user not found in database." });
 
         const createdUser = await User.create({
@@ -238,6 +240,8 @@ const approveRequest = async (req, res) => {
             password: requestedUser.password,
             dob: requestedUser.dob
         });
+
+        console.log(createdUser);
 
         if (!createdUser) return res.status(404).json({ success: false, message: "User is not created in database." });
 
@@ -263,7 +267,7 @@ const approveRequest = async (req, res) => {
 
         return res.status(200).json({ success: false, message: "User approved successfully." });
     } catch (error) {
-        return res.status(404).json({ success: false, message: "Something went wrong while approving user." });
+        return res.status(404).json({ success: false, message: "Something went wrong while approving user.",error:error.message });
     }
 }
 
@@ -321,4 +325,32 @@ const removeUser = async (req, res) => {
 }
 
 
-export { registerUser, loginUser, logoutUser, modifyPermissions, approveRequest, removeUser };
+const verifyUser = async (req,res)=>{
+    const {token}  = req.params;
+
+    if(!token) return res.status(404).json({success:true,message:"token not found"});
+
+    const decode=jwt.verify(token,process.env.JWT_SECRET);
+
+    if(!decode) return res.status(404).json({success:false,message:"not a valid token."});
+
+    try{
+        const requestUser = await Request.findById(decode?.id);
+
+        if(!requestUser) return res.status(404).json({success:false,message:"Requested uesr not exits."});
+
+        requestUser.verifiedEmail = true;
+
+        await registerUser.save();
+
+        return res.status(200).json({success:true,message:"Email varified successfully"});
+    }
+    catch(error)
+    {
+        return res.status(500).json({success:false,message:"something went wrong while verifying user."});
+    }
+    
+}
+
+
+export { registerUser, loginUser, logoutUser, modifyPermissions, approveRequest, removeUser ,verifyUser };
