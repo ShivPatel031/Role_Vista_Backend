@@ -5,12 +5,12 @@ dotenv.config();
 // mail verification function
 const sendMail = async (to_email,subject,message)=>
 {
-    const info = await transport.sendMail({
-        from: `${process.env.EMAIL_FROM}`, 
-        to: `${to_email}`, 
-        subject, 
+      transport.sendMail({
+        from: process.env.EMAIL_FROM, 
+        to: to_email, 
+        subject:subject, 
         html:message,
-      });
+      },(error)=>{if(error) console.log(error)});
 }
 
 export {sendMail};

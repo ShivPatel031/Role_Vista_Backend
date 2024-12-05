@@ -10,8 +10,7 @@ import { Post } from "../Models/PostModel.js"
 //  user register controller
 const registerUser = async (req, res) => {
     // collect all parameter
-    const { userName, role, email, branch, dob, gender, mobileNo, password } = req.body;
-
+    let{ userName, role, email, branch, dob, gender, mobileNo, password } = req.body;
 
     // checking all required parameters present
     if (!userName || !email || !role || !branch || !dob || !gender || !mobileNo || !password) {
@@ -48,8 +47,10 @@ const registerUser = async (req, res) => {
     if (!validateGender(gender)) return res.status(404).json({ success: false, message: "Gender is not valid." });
 
 
+    if(role === "student") role = "user";
+    if(role === "teacher") role = "sub-admin";
     //  hashing password
-    const hashPassword = bcrypt.hash(password, process.env.SALT);
+    const hashPassword = await bcrypt.hash(password, Number(process.env.SALT));
 
 
     // Storing data
@@ -73,6 +74,8 @@ const registerUser = async (req, res) => {
             gender,
             password: hashPassword
         });
+
+        
 
         if (!user) return res.status(500).json({ success: false, message: "something went wrong while add user in database." });
 

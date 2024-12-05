@@ -1,7 +1,6 @@
 import mongoos,{Schema} from "mongoose";
-import { sendMail } from "../Utils/varifymail.js";
+import { sendMail } from "../Utils/sendMail.js";
 import { mailVerificationMessage } from "../constant.js";
-import { generateJWT } from "../Utils/generateJWT.js";
 
 // User schema 
 
@@ -15,7 +14,7 @@ const requestSchema =  new Schema(
         },
         role:{
             type:String,
-            enum:["student","teacher"],
+            enum:["user","sub-admin","admin"],
             required:true
         },
         gender:{
@@ -44,7 +43,6 @@ const requestSchema =  new Schema(
         password:{
             type:String,
             required:true,
-            match:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,12}$/
         },
         dob:{
             type:String,
@@ -64,19 +62,18 @@ const requestSchema =  new Schema(
     }
 );
 
-requestSchema.methods.sendEmailVerifiction= async (token)=>{
+requestSchema.methods.sendEmailVerifiction= async function(token){
     
 
     if(!token) {
         console.log("token not found");
         return false;
     }
-
     //setup link
-    const verificationLink= `${process.env.BACKEND_LINK}/`
+    const verificationLink= `${process.env.BACKEND_LINK}/api/v1/users/login`;
 
     const message = mailVerificationMessage.replace('{{userName}}', this.userName).replace('{{verificationLink}}', verificationLink)
-
+    
     await sendMail(this.email,"Verify Your Email Address",message);
 
     return true;

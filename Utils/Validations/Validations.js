@@ -1,4 +1,4 @@
-const { isValidObjectId } = require('mongoose');
+import { isValidObjectId } from "mongoose";
 // To validate name
 const validateName = (name)=>
 {
@@ -73,3 +73,5 @@ export {
             validateId,
             validateDOB
         };
+
+// console.log(validateDOB("2003-03-31"));

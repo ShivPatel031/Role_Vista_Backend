@@ -12,7 +12,7 @@ const userSchema =  new Schema(
         },
         role:{
             type:String,
-            enum:["student","teacher"],
+            enum:["user","sub-admin","admin"],
             required:true
         },
         gender:{
