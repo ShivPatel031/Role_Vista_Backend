@@ -8,7 +8,7 @@ router.route("/registerUser").post(registerUser);
 
 router.route("/login").post(loginUser);
 
-router.route("/varifyUser/:token").post(verifyUser);
+router.route("/verifyUser/:token").get(verifyUser);
 
 router.route("/approveUser").post(auth,isAdmin,approveRequest);
 

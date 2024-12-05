@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import { app } from "./app.js";
 import { connectDatabase } from "./Config/DatabaseConnection.js";
 
+
 // Config .env file
 dotenv.config();
 

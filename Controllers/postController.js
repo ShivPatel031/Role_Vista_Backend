@@ -1,17 +1,28 @@
-import Post from "../Models/PostModel"
-import Comment from "../Models/CommentModel"
-import {createPostCloudinary,removePostCloudinary} from "../Utils/cloudinary"
+import {Post} from "../Models/PostModel.js"
+import {Comment} from "../Models/CommentModel.js"
+import {createPostCloudinary,removePostCloudinary} from "../Utils/cloudinary.js"
+import fs from "fs"
+import { User } from "../Models/UserModel.js"
+
 
 
 const createPost = async (req, res) => {
     try {
 
-        const { title, description, enableComment, category, userId } = req.body;
+        let {title, description, enableComment, category} = req.body;
 
-        const file = req.files.file;
+        title = title.trim();
+        description = description.trim();
+
+        enableComment = enableComment === "true" ? true : false;
+
+        const file = req.file;
+        
+
+        if(!file) return res.status(404).json({success:false,message:"file not found."});
 
         const supportedType = ["mp4", "mov", "jpg", "jpeg", "png"]
-        const fileType = file.name.split('.')[1]
+        const fileType = file.originalname.split('.')[1]
         if (!supportedType.includes(fileType)) {
             return res.status(400).json({
                 success: false,
@@ -28,6 +39,8 @@ const createPost = async (req, res) => {
             })
         }
 
+        
+
         const response = await createPostCloudinary(file, "posts")
 
         if (!response) {
@@ -37,12 +50,14 @@ const createPost = async (req, res) => {
             })
         }
 
+        fs.unlinkSync(file.path);
+
         const dbResponse = await Post.create({
             title,
             description,
             enableComment,
-            category,
-            userId,
+            categories:category,
+            userId:req.user._id,
             contentUrl: response.secure_url,
             cloudinaryId:response.public_id
         })
@@ -51,12 +66,20 @@ const createPost = async (req, res) => {
             return res.status(500).json({ success: false, message: "somthing went wrong while inserting post in database." });
         }
 
+
+        req.user.posts.push(dbResponse._id);
+
+        await req.user.save();
+
         return res.status(200).json({
             success: true,
             data: dbResponse,
             message: "Post uploaded successfully."
         })
     } catch (err) {
+
+        if(file) fs.unlinkSync(file.path);
+
         return res.status(500).json({
             success:false,
             message:"error while uploading post."
@@ -113,6 +136,10 @@ const removePost = async (req, res) => {
                 })
             }
         })
+
+        req.user.posts.pull(post._id);
+
+        await req.user.save();
 
         const postModelResponse=await Post.findByIdAndDelete(postId)
 

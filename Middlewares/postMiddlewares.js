@@ -1,6 +1,6 @@
-import { Permission } from "../Models/PermissionModel"
-import { Post } from "../Models/PostModel"
-import { User } from "../Models/UserModel"
+import { Permission } from "../Models/PermissionModel.js"
+import { Post } from "../Models/PostModel.js"
+import { User } from "../Models/UserModel.js"
 
 
 const canPost = async (req, res, next) => {
@@ -55,7 +55,7 @@ const canRemovePost =async (req, res, next) => {
                 })
             }
 
-            if(user.role==="student" && user._id===post.userId){
+            if(user.role==="user" && user._id===post.userId){
                 next()
             }
 

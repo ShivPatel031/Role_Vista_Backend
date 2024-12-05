@@ -6,6 +6,9 @@ import { generateJWT } from "../Utils/generateJWT.js";
 import { isValidObjectId } from "mongoose";
 import { Permission } from "../Models/PermissionModel.js";
 import { Post } from "../Models/PostModel.js"
+import jwt from "jsonwebtoken";
+import { adminApprovalMessage } from "../constant.js";
+import { sendMail } from "../Utils/sendMail.js";
 
 //  user register controller
 const registerUser = async (req, res) => {
@@ -79,7 +82,7 @@ const registerUser = async (req, res) => {
 
         if (!user) return res.status(500).json({ success: false, message: "something went wrong while add user in database." });
 
-        const token = generateJWT(user, "10m");
+        const token = await generateJWT(user, "10m");
 
         const success = await user.sendEmailVerifiction(token);
 
@@ -230,6 +233,12 @@ const approveRequest = async (req, res) => {
         
         if (!requestedUser) return res.status(404).json({ success: false, message: "Requested user not found in database." });
 
+        if(!requestedUser.verifiedEmail) return res.status(404).json({success:false,message: "Requested user email is not varified yet."});
+
+        const user = await User.findOne({email:requestedUser.email});
+
+        if(user) return res.status(404).json({success:false,message:"User already exist"});
+
         const createdUser = await User.create({
             userName: requestedUser.userName,
             role: requestedUser.role,
@@ -241,14 +250,13 @@ const approveRequest = async (req, res) => {
             dob: requestedUser.dob
         });
 
-        console.log(createdUser);
 
         if (!createdUser) return res.status(404).json({ success: false, message: "User is not created in database." });
 
         await Request.findByIdAndDelete(requestedUserId);
 
         let permissions={}
-        if(createdUser.role=="student"){
+        if(createdUser.role=="user"){
             permissions={
                 canSubAdminRestrictComment:true,
                 canSubAdminRestrictPost:true
@@ -264,6 +272,14 @@ const approveRequest = async (req, res) => {
                 message:"unable to create permissions."
             })
         }
+
+        const message = adminApprovalMessage.replace('{{name}}', createdUser.userName)
+        .replace('{{email}}', createdUser.email)
+        .replace('{{role}}', createdUser.role)
+        .replace('{{branch}}', createdUser.branch || 'N/A')
+        .replace('{{loginLink}}', `${process.env.FRONTEND_URL}/login`);
+
+        await sendMail(createdUser.email,"Welcome to Rolevista - Your Account Has Been Approved!",message);
 
         return res.status(200).json({ success: false, message: "User approved successfully." });
     } catch (error) {
@@ -330,18 +346,21 @@ const verifyUser = async (req,res)=>{
 
     if(!token) return res.status(404).json({success:true,message:"token not found"});
 
-    const decode=jwt.verify(token,process.env.JWT_SECRET);
-
-    if(!decode) return res.status(404).json({success:false,message:"not a valid token."});
+    
 
     try{
+
+        const decode=await jwt.verify(token,process.env.JWT_SECRET);
+
+        if(!decode) return res.status(404).json({success:false,message:"not a valid token."});
+
         const requestUser = await Request.findById(decode?.id);
 
         if(!requestUser) return res.status(404).json({success:false,message:"Requested uesr not exits."});
 
         requestUser.verifiedEmail = true;
 
-        await registerUser.save();
+        await requestUser.save();
 
         return res.status(200).json({success:true,message:"Email varified successfully"});
     }

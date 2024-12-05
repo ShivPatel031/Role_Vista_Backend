@@ -42,7 +42,7 @@ const userSchema =  new Schema(
             type:String,
             required:false
         },
-        post:[{
+        posts:[{
             type:Schema.Types.ObjectId,
             ref:"Post"
         }],

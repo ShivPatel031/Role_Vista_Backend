@@ -38,7 +38,7 @@ const validateGender = (gender)=>
 // to validate branch
 const validateBranch = (branch)=>
 {
-    return (branch === "cse" || branch === "electric" || branch === "mechanical") ? true : false ;
+    return (branch === "cse" || branch === "electronic" || branch === "mechanic") ? true : false ;
 }
 
 // to validate password

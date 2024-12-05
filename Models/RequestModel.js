@@ -70,7 +70,7 @@ requestSchema.methods.sendEmailVerifiction= async function(token){
         return false;
     }
     //setup link
-    const verificationLink= `${process.env.BACKEND_LINK}/api/v1/users/varifyUser/${token}`;
+    const verificationLink= `${process.env.BACKEND_LINK}/api/v1/users/verifyUser/${token}`;
 
     const message = mailVerificationMessage.replace('{{userName}}', this.userName).replace('{{verificationLink}}', verificationLink)
     

@@ -3,6 +3,7 @@ import express from "express";
 import userRoutes from "./Routes/user.Routes.js";
 import postRoutes from "./Routes/post.Routes.js";
 import commentRoutes from "./Routes/comment.Routes.js";
+import morgan from "morgan";
 
 // creating app object
 const app = express();
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended:false}));
 app.use(express.static("public"));
 app.use(cookieParser());
+app.use(morgan("dev"));
 
 // route
 app.use("/api/v1/users",userRoutes);
