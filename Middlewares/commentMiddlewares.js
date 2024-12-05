@@ -1,6 +1,27 @@
+import { Permission } from "../Models/PermissionModel";
 import { Comment } from "../Models/CommentModel";
 import { Post } from "../Models/PostModel";
 import { User } from "../Models/UserModel";
+
+
+const canComment = async (req,res,next) =>
+{
+    try {
+        const userId = req.user?._id;
+
+        const permissions = await Permission.findOne({userId});
+
+        if(!permissions) return res.status(500).json({success:false,message:"permissin data not found."});
+
+        if(!permissions.canComment) return res.status(404).json({success:false,message:"User don't have permissin to comment."});
+
+    } catch (error) {
+        return res.status(500).json({success:false,message:"Something went wrong while checking user permission"});
+    }
+
+    next();
+}
+
 
 const canRemoveComment = async(req,res,next)=>
 {
@@ -34,4 +55,4 @@ const canRemoveComment = async(req,res,next)=>
     next();
 }
 
-export {canRemoveComment};
+export {canComment,canRemoveComment}
