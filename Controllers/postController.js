@@ -64,7 +64,29 @@ const createPost = async (req, res) => {
     }
 }
 
+const getPosts=async (req,res)=>{
+    try{
+        const posts=await Post.find().sort({createdAt:-1})
+        if(!posts){
+            return res.status(500).json({
+                success:false,
+                message:"unable to find posts."
+            })
+        }
 
+        return res.status(200).json({
+            success:true,
+            message:"successfully fetched all the posts."
+        })
+
+    }
+    catch(error){
+        return res.status(500).json({
+            success:false,
+            message:"error while fetching posts."
+        })
+    }
+}
 
 const removePost = async (req, res) => {
     try {
@@ -115,4 +137,4 @@ const removePost = async (req, res) => {
     }
 }
 
-export {createPost,removePost}
+export {createPost,removePost,getPosts}
