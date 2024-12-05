@@ -5,7 +5,7 @@ dotenv.config();
 
 // authentication
 const auth=async (req,res,next)=>{
-    
+
         const token=req.cookies?.role_vista_token || req.body?.role_vista_token || req.header?.role_vista_token ;
         // || req.header("role_vista_token").replace("Bearer","")
 
@@ -34,7 +34,8 @@ const auth=async (req,res,next)=>{
                 message:"error while decoding."
             })
         }
-        next();
+        
+        return next();       
 }
 
 

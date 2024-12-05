@@ -3,6 +3,7 @@ import {Comment} from "../Models/CommentModel.js"
 import {createPostCloudinary,removePostCloudinary} from "../Utils/cloudinary.js"
 import fs from "fs"
 import { User } from "../Models/UserModel.js"
+import { validateId } from "../Utils/Validations/Validations.js"
 
 
 
@@ -113,20 +114,16 @@ const getPosts=async (req,res)=>{
 
 const removePost = async (req, res) => {
     try {
-
         const {postId} = req.body;
+
+        if(!postId) return res.status(404).json({success:false,message:"post id not found"});
+
+        if(!validateId(postId)) return res.status(404).json({success:false,message:"post id is not valid."});
 
         const post=await Post.findById(postId)
 
-        const response=await removePostCloudinary(post.cloudinaryId)
-
-        if(!response){
-            return res.status(500).json({
-                success:false,
-                message:"unable to remove."
-            })
-        }
-
+        if(!post) return res.status(500).json({success:true,message:"post not found."})
+        
         post.comments.map(async (comment)=>{
             const commentModelResponse=await Comment.findByIdAndDelete(comment)
             if (!commentModelResponse){
@@ -137,9 +134,22 @@ const removePost = async (req, res) => {
             }
         })
 
-        req.user.posts.pull(post._id);
+        const user = await User.findById(post.userId);
 
-        await req.user.save();
+        if(!user) return res.status(404).json({success:false,message:"post user not found."});
+
+        user.posts.pull(post._id);
+
+        await user.save();
+
+        const response=await removePostCloudinary(post.cloudinaryId);
+
+        if(!response){
+            return res.status(500).json({
+                success:false,
+                message:"unable to remove."
+            })
+        }
 
         const postModelResponse=await Post.findByIdAndDelete(postId)
 

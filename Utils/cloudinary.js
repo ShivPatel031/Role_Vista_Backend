@@ -11,6 +11,7 @@ const createPostCloudinary=async (file,folder,quality=100)=>{
 }
 
 const removePostCloudinary=async (public_id)=>{
+    cloudinaryConnect();
     return await cloudinary.v2.uploader.destroy(public_id)
 }
 
