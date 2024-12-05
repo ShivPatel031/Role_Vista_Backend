@@ -1,4 +1,4 @@
-import { Post } from "../models/PostModel"
+import { Post } from "../Models/PostModel"
 
 const createComment = async (req, res) => {
     try {
@@ -40,9 +40,11 @@ const createComment = async (req, res) => {
 
 const deleteComment = async (req, res) => {
     try {
-        const postId = req.body.commentId
+        const commentId = req.body.commentId
 
-        const postModelResponse = await Post.findOneAndUpdate({ _id: postId }, { $pull: { comments: commentId} })
+        const comment=await Comment.findById(commentId)
+
+        const postModelResponse = await Post.findOneAndUpdate({ _id: comment.postId }, { $pull: { comments: commentId} })
 
         if (!postModelResponse){
             return res.status(500).json({
