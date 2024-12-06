@@ -1,12 +1,17 @@
-import { Post } from "../Models/PostModel"
+import { Post } from "../Models/PostModel.js"
+import { Comment } from "../Models/CommentModel.js";
 
 const createComment = async (req, res) => {
     try {
-        const userId = req.body.userId
+        const userId = req.user._id;
         const postId = req.body.postId
         const comment = req.body.comment.trim()
 
+        console.log(userId,postId,comment);
+
         const commentModelResponse = await Comment.create({ userId, postId, comment })
+
+        console.log(userId,postId,comment,"till here");
 
         if (!commentModelResponse) {
             return res.status(500).json({

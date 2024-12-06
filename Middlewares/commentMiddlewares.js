@@ -1,7 +1,8 @@
-import { Permission } from "../Models/PermissionModel";
-import { Comment } from "../Models/CommentModel";
-import { Post } from "../Models/PostModel";
-import { User } from "../Models/UserModel";
+import { Permission } from "../Models/PermissionModel.js";
+import { Comment } from "../Models/CommentModel.js";
+import { Post } from "../Models/PostModel.js";
+import { User } from "../Models/UserModel.js";
+import { validateId } from "../Utils/Validations/Validations.js";
 
 
 const canComment = async (req,res,next) =>
@@ -27,7 +28,7 @@ const canRemoveComment = async(req,res,next)=>
 {
     if(req.user.role === 'admin') next();
 
-    if(req.user.role === 'student') return res.status(404).json({success:false,message:"don't have permission"});
+    if(req.user.role === 'user') return res.status(404).json({success:false,message:"don't have permission"});
 
     const {commentId} = req.body;
     

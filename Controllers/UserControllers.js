@@ -192,7 +192,7 @@ function isBoolType(value) {
 }
 
 const modifyPermissions = async (req, res) => {
-    const { canPost, canComment, canSubAdminRestrictPost, canSubAdminRestrictComment } = req.body;
+    let { canPost, canComment, canSubAdminRestrictPost, canSubAdminRestrictComment } = req.body;
 
     if (!isBoolType(canPost) || !isBoolType(canComment) || !isBoolType(canSubAdminRestrictComment) || !isBoolType(canSubAdminRestrictPost)) {
         return res.status(404).json({ success: false, message: "invalid values." });
@@ -206,8 +206,12 @@ const modifyPermissions = async (req, res) => {
 
         permissions.canPost = canPost;
         permissions.canComment = canComment;
-        permissions.canSubAdminRestrictComment = canSubAdminRestrictComment;
-        permissions.canSubAdminRestrictPost = canSubAdminRestrictPost;
+        if(!(req.user.role === "sub-admin"))
+        {
+            permissions.canSubAdminRestrictComment = canSubAdminRestrictComment;
+            permissions.canSubAdminRestrictPost = canSubAdminRestrictPost;
+        }
+        
 
         const response = await permissions.save();
 

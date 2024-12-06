@@ -1,12 +1,18 @@
 import { Permission } from "../Models/PermissionModel.js";
 import { User } from "../Models/UserModel.js";
-import { validateId } from "../Utils/Validations/Validations";
+import { validateId } from "../Utils/Validations/Validations.js";
 
 const modifyPermissionMiddleware = async(req,res,next)=>
 {
-    if(req.user.role === 'admin') next();
+    if(req.user.role === 'admin') return next();
+
+    if(req.user.role === "user") return res.status(404).json({success:false,message:"user don't have this permission."});
+
+    
 
     const {restrictedUserId} = req.body;
+
+    if(req.user._id.equals(restrictedUserId)) return res.status(404).json({success:false,message:"user don't have this permission."});
     
     if(!validateId(restrictedUserId)) return res.status(404).json({success:false,message:"not a valid Id."});
 
@@ -22,15 +28,16 @@ const modifyPermissionMiddleware = async(req,res,next)=>
 
         if(!permissions) return res.status(500).json({success:false,message:"restrict user permission data not found."});
 
-        if(!req.body.canPost)
-        {
-            if(!permissions.canSubAdminRestrictPost) return res.status(500).json({success:false,message:"user don't have permission to restrict this user."})
-        }
+        req.body.canPost = req.body.canPost ===  "true" ? true : false ;
+        req.body.canComment = req.body.canComment ===  "true" ? true : false ;
+        req.body.canSubAdminRestrictComment = req.body.canSubAdminRestrictComment ===  "true" ? true : false ;
+        req.body.canSubAdminRestrictPost = req.body.canSubAdminRestrictPost ===  "true" ? true : false ;
 
-        if(!req.body.canComment)
-        {
-            if(!permissions.canSubAdminRestrictComment) return res.status(500).json({success:false,message:"user don't have permission to restrict this user."})
-        }
+        if(!permissions.canSubAdminRestrictPost) return res.status(500).json({success:false,message:"user don't have permission to restrict/unrestrict this user."})
+
+
+        if(!permissions.canSubAdminRestrictComment) return res.status(500).json({success:false,message:"user don't have permission to restrict/unrestrict this user."})
+
 
         req.permissions = permissions;
     } 
