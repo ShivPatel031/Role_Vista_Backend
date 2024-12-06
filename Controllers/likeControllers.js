@@ -4,10 +4,11 @@ import { Post } from "../Models/PostModel.js"
 const likePost=async (req,res)=>{
     try{
         
-    const {userId,postId}=req.body
-
+    const {postId}=req.body
+    const userId =  req.user._id;
+   
     const post=await Post.findById(postId)
-
+    
     if(!post){
         return res.status(404).json({
             success:false,
@@ -21,7 +22,7 @@ const likePost=async (req,res)=>{
         })
     }
     
-    const postModelResponse=await Post.findByIdAndUpdate(postId,{$push:{likes:userId}})
+    const postModelResponse=await Post.findByIdAndUpdate(postId,{$push:{likes:userId}});
 
     if(!postModelResponse){
         return res.status(500).json({
@@ -47,7 +48,8 @@ const likePost=async (req,res)=>{
 const removeLike=async (req,res)=>{
     try{
         
-    const {userId,postId}=req.body
+    const {postId}=req.body;
+    const userId = req.user._id;
 
     const post=await Post.findById(postId)
 
