@@ -3,20 +3,19 @@ import { Request } from "../Models/RequestModel.js";
 import { validateBranch, validateEmail, validateGender, validateMobileNumber, validateName, validatePassword, validateRole, validateDOB, validateId } from "../Utils/Validations/Validations.js"
 import bcrypt from "bcrypt";
 import { generateJWT } from "../Utils/generateJWT.js";
-import { isValidObjectId } from "mongoose";
 import { Permission } from "../Models/PermissionModel.js";
 import { Post } from "../Models/PostModel.js"
 import jwt from "jsonwebtoken";
-import { adminApprovalMessage } from "../constant.js";
+import { adminApprovalMessage, adminDisapprovalMessage } from "../constant.js";
 import { sendMail } from "../Utils/sendMail.js";
 
 //  user register controller
 const registerUser = async (req, res) => {
     // collect all parameter
-    let{ userName, role, email, branch, dob, gender, mobileNo, password } = req.body;
-
+    let{ name, role, email, branch, dateOfBirth, gender, mobileNo, password } = req.body;
+    
     // checking all required parameters present
-    if (!userName || !email || !role || !branch || !dob || !gender || !mobileNo || !password) {
+    if (!name || !email || !role || !branch || !dateOfBirth || !gender || !mobileNo || !password) {
         return res.status(404).json({
             success: false,
             message: "All fields are required."
@@ -24,41 +23,44 @@ const registerUser = async (req, res) => {
     }
 
     // triming and lowecase conversion
-    userName = userName.trim().toLowerCase();
+    const userName = name.trim().toLowerCase();
     email = email.trim().toLowerCase();
     role = role.trim().toLowerCase();
     branch = branch.trim().toLowerCase();
-    dob = dob.trim().toLowerCase();
+    const dob = dateOfBirth.trim().toLowerCase();
     gender = gender.trim().toLowerCase();
     mobileNo = mobileNo.trim().toLowerCase();
 
+    
+    
     // verifying all parameter values
     if (!validateName(userName)) return res.status(404).json({ success: false, message: "Name length must be less then 50 or only inlude aphabets." });
-
+    
     if (!validateEmail(email)) return res.status(404).json({ success: false, message: "Email is not in correct formate." });
-
+    
     if (!validateMobileNumber(mobileNo)) return res.status(404).json({ success: false, message: "Mobile number must have 10 length and only numeric character" });
-
+    
     if (!validatePassword(password)) return res.status(404).json({ success: false, message: "Password must contain at least 1 lowercase, 1 uppercase , 1 number and 1 special character and length must be between 8-12." });
 
     if (!validateBranch(branch)) return res.status(404).json({ success: false, message: "Branch is not valid." });
 
     if (!validateRole(role)) return res.status(404).json({ success: false, message: "Role is not valid." });
-
+    
     if (!validateDOB(dob)) return res.status(404).json({ success: false, message: "Data of birth must be between 1920-present and must be 15 year older or more." });
 
     if (!validateGender(gender)) return res.status(404).json({ success: false, message: "Gender is not valid." });
-
+    
 
     if(role === "student") role = "user";
     if(role === "teacher") role = "sub-admin";
+    
     //  hashing password
     const hashPassword = await bcrypt.hash(password, Number(process.env.SALT));
 
 
     // Storing data
     try {
-
+        
         const existingUser = await User.findOne({ email });
         if (existingUser) return res.status(404).json({ success: true, message: "User already exist.", requestedUser: false });
 
@@ -171,11 +173,6 @@ const loginUser = async (req, res) => {
 }
 
 const logoutUser = async (req, res) => {
-    const userId = req.params;
-
-    if (!userId) return res.status(404).json({ success: false, message: "user id not found." });
-
-    if (!isValidObjectId(userId)) return res.status(404).json({ success: false, message: "user id is not valid." });
 
     const option = {
         httpOnly: true,
@@ -277,7 +274,7 @@ const approveRequest = async (req, res) => {
             })
         }
 
-        const message = adminApprovalMessage.replace('{{name}}', createdUser.userName)
+        const message = adminApprovalMessage.replaceAll('{{name}}', createdUser.userName)
         .replace('{{email}}', createdUser.email)
         .replace('{{role}}', createdUser.role)
         .replace('{{branch}}', createdUser.branch || 'N/A')
@@ -285,10 +282,39 @@ const approveRequest = async (req, res) => {
 
         await sendMail(createdUser.email,"Welcome to Rolevista - Your Account Has Been Approved!",message);
 
-        return res.status(200).json({ success: false, message: "User approved successfully." });
+        return res.status(200).json({ success: true, message: "User approved successfully." });
     } catch (error) {
         return res.status(404).json({ success: false, message: "Something went wrong while approving user.",error:error.message });
     }
+}
+
+const rejectUser = async(req,res)=>
+{
+    const { requestedUserId } = req.body;
+
+    if (!requestedUserId) return res.status(404).json({ success: false, message: "requestedUser Id is not found." });
+
+    if (!validateId(requestedUserId)) return res.status(404).json({ success: false, message: "requestedUserId is not valid id" });
+
+    try {
+        const requestedUser = await Request.findById(requestedUserId);
+
+
+        if (!requestedUser) return res.status(404).json({ success: false, message: "Requested user not found in database." });
+
+        const message = adminDisapprovalMessage.replaceAll('{{name}}', requestedUser.userName)
+        .replace('{{email}}', requestedUser.email)
+        .replace('{{role}}', requestedUser.role)
+        
+        
+        await sendMail(requestedUser.email,"Rolevista - Your Account Has Been Rejected!",message);
+
+        await Request.findByIdAndDelete(requestedUserId);
+
+        return res.status(200).json({ success: true, message: "User approved successfully." });
+    } catch (error) {
+        return res.status(404).json({ success: false, message: "Something went wrong while approving user.",error:error.message });
+    }       
 }
 
 
@@ -373,7 +399,61 @@ const verifyUser = async (req,res)=>{
         return res.status(500).json({success:false,message:"something went wrong while verifying user."});
     }
     
+};
+
+const getRequestedUser = async (req,res)=>
+{
+    try{
+        const response =  await Request.find({verifiedEmail:true});
+
+        if(!response)
+        {
+            return  res.status(404).json({success:false,message:"User request not found."});
+        }
+
+        return res.status(200).json({success:true,message:"User Requests not found.",data:response});
+    }
+    catch(error)
+    {
+        return res.status(404).json({success:false,message:"something went wrong while geting using fetching requests."})
+    }
+}
+
+const loginWithToken = async(req,res)=>
+{
+    const userId = req.user._id
+    try {
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
+        // to send user data to frontend with password null for security.
+        user.password = null;
+
+        // genrate token
+        const authToken = await generateJWT(user, "12h");
+
+        if (!authToken) {
+            return res.status(500).json({ success: false, message: "token genereation error" });
+        }
+
+        const option = {
+            httpOnly: true,
+            sameSite: "none",
+            secure: true,
+            expiresIn: '24h'
+        }
+
+        return res.status(200).cookie("role_vista_token", authToken, option).json({ success: true, message: "user login successfully.", data: user });
+
+    } catch (error) {
+        console.log(error.message);
+        return res.status(500).json({ success: false, message: "something went wrong while login user.", error: error.message });
+    }
 }
 
 
-export { registerUser, loginUser, logoutUser, modifyPermissions, approveRequest, removeUser ,verifyUser };
+export { registerUser, loginUser, logoutUser, modifyPermissions, approveRequest, rejectUser ,removeUser ,verifyUser , getRequestedUser,loginWithToken};

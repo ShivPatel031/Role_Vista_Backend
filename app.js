@@ -3,6 +3,7 @@ import express from "express";
 import userRoutes from "./Routes/user.Routes.js";
 import postRoutes from "./Routes/post.Routes.js";
 import morgan from "morgan";
+import cors from "cors"
 
 // creating app object
 const app = express();
@@ -13,6 +14,13 @@ app.use(express.urlencoded({extended:false}));
 app.use(express.static("public"));
 app.use(cookieParser());
 app.use(morgan("dev"));
+
+app.use(cors(
+    {
+        origin:"http://localhost:5173",
+        credentials:true
+    }
+));
 
 // route
 app.use("/api/v1/users",userRoutes);
