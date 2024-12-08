@@ -88,9 +88,9 @@ const createPost = async (req, res) => {
     }
 }
 
-const getPosts=async (req,res)=>{
+const getAllPosts=async (req,res)=>{
     try{
-        const posts=await Post.find().sort({createdAt:-1})
+        const posts=await Post.find().sort({createdAt:-1}).populate('comments').exec();
         if(!posts){
             return res.status(500).json({
                 success:false,
@@ -100,7 +100,8 @@ const getPosts=async (req,res)=>{
 
         return res.status(200).json({
             success:true,
-            message:"successfully fetched all the posts."
+            message:"successfully fetched all the posts.",
+            data:posts
         })
 
     }
@@ -174,4 +175,4 @@ const removePost = async (req, res) => {
     }
 }
 
-export {createPost,removePost,getPosts}
+export {createPost,removePost,getAllPosts}

@@ -7,6 +7,7 @@ import { validateId } from "../Utils/Validations/Validations.js";
 
 const canComment = async (req,res,next) =>
 {
+    if(req.user.role === "admin") return next();
     try {
         const userId = req.user?._id;
 
@@ -26,7 +27,7 @@ const canComment = async (req,res,next) =>
 
 const canRemoveComment = async(req,res,next)=>
 {
-    if(req.user.role === 'admin') next();
+    if(req.user.role === 'admin') return next();
 
     if(req.user.role === 'user') return res.status(404).json({success:false,message:"don't have permission"});
 

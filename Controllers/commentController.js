@@ -11,8 +11,6 @@ const createComment = async (req, res) => {
 
         const commentModelResponse = await Comment.create({ userId, postId, comment })
 
-        console.log(userId,postId,comment,"till here");
-
         if (!commentModelResponse) {
             return res.status(500).json({
                 success: false,
