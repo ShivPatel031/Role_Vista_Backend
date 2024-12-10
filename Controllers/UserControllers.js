@@ -189,6 +189,7 @@ function isBoolType(value) {
 }
 
 const modifyPermissions = async (req, res) => {
+    
     let { canPost, canComment, canSubAdminRestrictPost, canSubAdminRestrictComment } = req.body;
 
     if (!isBoolType(canPost) || !isBoolType(canComment) || !isBoolType(canSubAdminRestrictComment) || !isBoolType(canSubAdminRestrictPost)) {
@@ -196,7 +197,7 @@ const modifyPermissions = async (req, res) => {
     }
 
     const permissions = new Permission(req.permissions);
-
+    
     try {
 
         if (!permissions) res.status(500).json({ success: false, message: "user permission data not found." });
@@ -209,9 +210,8 @@ const modifyPermissions = async (req, res) => {
             permissions.canSubAdminRestrictPost = canSubAdminRestrictPost;
         }
         
-
         const response = await permissions.save();
-
+        
         if (!response) return res.status(500).json({ success: false, message: "somthing went worng while nodifying permission of user." });
 
         return res.status(200).json({ success: true, message: "Permission is updated successfully." })
@@ -346,6 +346,7 @@ const removeUser = async (req, res) => {
             }
         })
 
+
         const userModelResponse = await User.findByIdAndDelete(userId)
 
         if (!userModelResponse) {
@@ -354,6 +355,8 @@ const removeUser = async (req, res) => {
                 message: "unable to remove user."
             })
         }
+
+        await Permission.findOneAndDelete({userId})
 
         return res.status(200).json({
             success: true,
@@ -444,7 +447,7 @@ const loginWithToken = async(req,res)=>
             httpOnly: true,
             sameSite: "none",
             secure: true,
-            expiresIn: '24h'
+            expiresIn: '12h'
         }
 
         return res.status(200).cookie("role_vista_token", authToken, option).json({ success: true, message: "user login successfully.", data: user });
@@ -455,5 +458,69 @@ const loginWithToken = async(req,res)=>
     }
 }
 
+const fetchAllUserSubAdminAndPermission = async (req, res) => {
+try {
+    // Fetch all users with role 'user' or 'sub-admin'
 
-export { registerUser, loginUser, logoutUser, modifyPermissions, approveRequest, rejectUser ,removeUser ,verifyUser , getRequestedUser,loginWithToken};
+    let users = ""
+    if(req.user.role === 'admin')
+    {
+        users = await User.find({ role: { $in: ['user', 'sub-admin'] } });
+    }
+
+    if(req.user.role === 'sub-admin')
+    {
+        users = await User.find({$and:[{role:'user',branch:req.user.branch}]});
+    }
+    
+
+    if (!users || users.length === 0) {
+    return res.status(404).json({ success: false, message: "No users found." });
+    }
+
+    // Use Promise.all to resolve all async operations
+    let data = await Promise.all(
+    users.map(async (user) => {
+        let permission = await Permission.find({ userId: user._id });
+
+        if (!permission || permission.length === 0) {
+        throw new Error(`Permissions not found for user with ID: ${user._id}`);
+        }
+
+        // Return a new object with permissions
+        return {
+        ...user.toObject(), // Convert Mongoose document to plain object
+        permissions: permission[0],
+        };
+    })
+    );
+
+    return res.status(200).json({ success: true, message: "Users and their permissions found.", data });
+} catch (error) {
+    return res.status(500).json({
+    success: false,
+    message: "Something went wrong while fetching all users.",
+    error: error.message,
+    });
+}
+};
+
+const fetchUserToRemove = async (req,res)=>
+{
+    try
+    {
+        const users = await User.find({ role: { $in: ['user', 'sub-admin'] } });
+
+        if(!users) return res.status(500).json({success:false,message:"users not founds"});
+
+        return res.status(200).json({success:true,message:"fetch users successfully.",data:users});
+    }
+    catch(error)
+    {
+        return res.status(500).json({success:false,message:"something went wrong while fetching user.",error:error.message});
+    }
+}
+  
+
+
+export { registerUser, loginUser, logoutUser, modifyPermissions, approveRequest, rejectUser ,removeUser ,verifyUser , getRequestedUser,loginWithToken , fetchAllUserSubAdminAndPermission,fetchUserToRemove};

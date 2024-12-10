@@ -90,7 +90,7 @@ const createPost = async (req, res) => {
 
 const getAllPosts=async (req,res)=>{
     try{
-        const posts=await Post.find().sort({createdAt:-1}).populate('comments').exec();
+        const posts=await Post.find().sort({createdAt:-1}).populate('comments').populate({path:"userId",select:"branch"}).exec();
         if(!posts){
             return res.status(500).json({
                 success:false,
@@ -174,5 +174,18 @@ const removePost = async (req, res) => {
         })
     }
 }
+
+// const getAllMyPost = async (req,res)=>
+// {
+//     try {
+//         const userId = req.user._id
+
+//         const posts = await Post.find({userId});
+
+        
+//     } catch (error) {
+//         return res.status(500).json({success:true,message:"somthing went wrong while fetch all user's posts.",error:error.message});
+//     }
+// }
 
 export {createPost,removePost,getAllPosts}

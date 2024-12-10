@@ -7,7 +7,6 @@ const createComment = async (req, res) => {
         const postId = req.body.postId
         const comment = req.body.comment.trim()
 
-        console.log(userId,postId,comment);
 
         const commentModelResponse = await Comment.create({ userId, postId, comment })
 

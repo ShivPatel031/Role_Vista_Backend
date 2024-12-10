@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { approveRequest, getRequestedUser, loginUser, loginWithToken, logoutUser, modifyPermissions, registerUser, rejectUser, verifyUser } from "../Controllers/UserControllers.js";
+import { approveRequest, fetchAllUserSubAdminAndPermission, fetchUserToRemove, getRequestedUser, loginUser, loginWithToken, logoutUser, modifyPermissions, registerUser, rejectUser, removeUser, verifyUser } from "../Controllers/UserControllers.js";
 import {auth, isAdmin} from "../Middlewares/auth.js"
 import { modifyPermissionMiddleware } from "../Middlewares/modifyPermissionMiddleware.js";
 
@@ -22,5 +22,11 @@ router.route("/logout").get(auth,logoutUser);
 router.route("/requestedUsers").get(auth,isAdmin,getRequestedUser);
 
 router.route("/loginWithToken").get(auth,loginWithToken);
+
+router.route("/fetchUsersWithPermissions").get(auth,fetchAllUserSubAdminAndPermission);
+
+router.route("/fetchUserstoRemove").get(auth,fetchUserToRemove);
+
+router.route("/removeUser").post(auth,isAdmin,removeUser);
 
 export default router;
