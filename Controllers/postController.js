@@ -4,10 +4,13 @@ import {createPostCloudinary,removePostCloudinary} from "../Utils/cloudinary.js"
 import fs from "fs"
 import { User } from "../Models/UserModel.js"
 import { validateId } from "../Utils/Validations/Validations.js"
+import { error } from "console"
 
 
 
 const createPost = async (req, res) => {
+    const file = req.file;
+
     try {
 
         let {title, description, enableComment, category} = req.body;
@@ -15,10 +18,7 @@ const createPost = async (req, res) => {
         title = title.trim();
         description = description.trim();
 
-        enableComment = enableComment === "true" ? true : false;
-
-        const file = req.file;
-        
+        enableComment = enableComment === "true" ? true : false; 
 
         if(!file) return res.status(404).json({success:false,message:"file not found."});
 
@@ -50,8 +50,7 @@ const createPost = async (req, res) => {
                 message: "error while uploading Post."
             })
         }
-
-        fs.unlinkSync(file.path);
+        console.log("test it")
 
         const dbResponse = await Post.create({
             title,
@@ -63,14 +62,27 @@ const createPost = async (req, res) => {
             cloudinaryId:response.public_id
         })
 
+        console.log("test 34");
+
         if (!dbResponse) {
             return res.status(500).json({ success: false, message: "somthing went wrong while inserting post in database." });
         }
 
+        const user =  await User.findById(req.user._id);
 
-        req.user.posts.push(dbResponse._id);
+        console.log("test 23");
+        console.log("user",user);
+        console.log("post",dbResponse);
 
-        await req.user.save();
+        user.posts.push(dbResponse._id);
+
+        console.log("user",user);
+
+        console.log("user test");
+
+        await user.save();
+
+        console.log("test2")
 
         return res.status(200).json({
             success: true,
@@ -79,12 +91,13 @@ const createPost = async (req, res) => {
         })
     } catch (err) {
 
-        if(file) fs.unlinkSync(file.path);
-
         return res.status(500).json({
             success:false,
             message:"error while uploading post."
         })
+    }
+    finally{
+        if(file) fs.unlinkSync(file.path);
     }
 }
 
@@ -121,9 +134,11 @@ const removePost = async (req, res) => {
 
         if(!validateId(postId)) return res.status(404).json({success:false,message:"post id is not valid."});
 
-        const post=await Post.findById(postId)
 
-        if(!post) return res.status(500).json({success:true,message:"post not found."})
+        const post=await Post.findById(postId)
+        console.log(post);
+
+        if(!post) return res.status(500).json({success:false,message:"post not found."})
         
         post.comments.map(async (comment)=>{
             const commentModelResponse=await Comment.findByIdAndDelete(comment)
@@ -136,6 +151,7 @@ const removePost = async (req, res) => {
         })
 
         const user = await User.findById(post.userId);
+        console.log(user)
 
         if(!user) return res.status(404).json({success:false,message:"post user not found."});
 
@@ -170,7 +186,8 @@ const removePost = async (req, res) => {
     } catch (err) {
         return res.status(500).json({
             success:false,
-            message:"error while removing post."
+            message:"error while removing post.",
+            error:err
         })
     }
 }
